@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import project.springblog.domain.BaseEntity;
@@ -23,11 +24,18 @@ public class User extends BaseEntity {
   private Long id;
 
   @Column(nullable = false, unique = true)
-  private String username;
+  private String email;
 
   @Column(nullable = false)
   private String password;
 
   @Column(nullable = false, unique = true)
-  private String email;
+  private String username;
+
+  @Builder
+  private User(String email, String password, String username) {
+    this.email = email;
+    this.password = password;
+    this.username = username;
+  }
 }
