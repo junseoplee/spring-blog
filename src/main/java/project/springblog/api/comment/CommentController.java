@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import project.springblog.api.comment.request.CommentCreateRequest;
 import project.springblog.api.comment.request.CommentUpdateRequest;
+import project.springblog.api.comment.request.CommentDeleteRequest;
 import project.springblog.application.comment.CommentService;
 import project.springblog.application.comment.response.CommentCreateResponse;
 import project.springblog.application.comment.response.CommentUpdateResponse;
@@ -41,5 +43,15 @@ public class CommentController {
   ) {
     CommentUpdateResponse response = commentService.updateComment(articleId, commentId, request.toServiceRequest());
     return ResponseEntity.ok(response);
+  }
+
+  @DeleteMapping("/{articleId}/{commentId}")
+  public ResponseEntity<Void> deleteComment(
+      @PathVariable Long articleId,
+      @PathVariable Long commentId,
+      @Valid @RequestBody CommentDeleteRequest request
+  ) {
+    commentService.deleteComment(articleId, commentId, request.toServiceRequest());
+    return ResponseEntity.noContent().build();
   }
 }
