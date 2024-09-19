@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import project.springblog.application.comment.request.CommentCreateServiceRequest;
+import project.springblog.application.comment.request.CommentDeleteServiceRequest;
 import project.springblog.application.comment.request.CommentUpdateServiceRequest;
 import project.springblog.application.comment.response.CommentCreateResponse;
 import project.springblog.application.comment.response.CommentUpdateResponse;
@@ -222,5 +223,109 @@ class CommentServiceTest {
 
     assertThat(response.getEmail()).isEqualTo("test@test.com");
     assertThat(response.getContent()).isEqualTo("updated content");
+  }
+
+  @Test
+  @DisplayName("댓글 삭제 실패 - 존재하지 않는 사용자")
+  void 댓글삭제_실패_존재하지않는사용자() {
+    CommentDeleteServiceRequest request = CommentDeleteServiceRequest.builder()
+                                                                     .email("test@test.com")
+                                                                     .password("test-pw")
+                                                                     .build();
+
+    doThrow(new BusinessException(ErrorCode.USER_NOT_FOUND))
+        .when(userValidator).validateUserAndPassword("test@test.com", "test-pw");
+
+    assertThatThrownBy(() -> commentService.deleteComment(1L, 1L, request))
+        .isInstanceOf(BusinessException.class)
+        .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+
+    verify(commentRepository, never()).deleteById(anyLong());
+  }
+
+  @Test
+  @DisplayName("댓글 삭제 실패 - 존재하지 않는 게시글")
+  void 댓글삭제_실패_존재하지않는게시글() {
+    CommentDeleteServiceRequest request = CommentDeleteServiceRequest.builder()
+                                                                     .email("test@test.com")
+                                                                     .password("test-pw")
+                                                                     .build();
+
+    User user = User.builder()
+                    .email("test@test.com")
+                    .password("encodedPassword")
+                    .username("testUser")
+                    .build();
+
+    when(userValidator.validateUserAndPassword("test@test.com", "test-pw")).thenReturn(user);
+    when(articleRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> commentService.deleteComment(1L, 1L, request))
+        .isInstanceOf(BusinessException.class)
+        .hasMessageContaining(ErrorCode.ARTICLE_NOT_FOUND.getMessage());
+
+    verify(commentRepository, never()).deleteById(anyLong());
+  }
+
+  @Test
+  @DisplayName("댓글 삭제 실패 - 존재하지 않는 댓글")
+  void 댓글삭제_실패_존재하지않는댓글() {
+    CommentDeleteServiceRequest request = CommentDeleteServiceRequest.builder()
+                                                                     .email("test@test.com")
+                                                                     .password("test-pw")
+                                                                     .build();
+
+    User user = User.builder()
+                    .email("test@test.com")
+                    .password("encodedPassword")
+                    .username("testUser")
+                    .build();
+
+    Article article = Article.builder()
+                             .user(user)
+                             .title("test article")
+                             .content("test content")
+                             .build();
+
+    when(userValidator.validateUserAndPassword("test@test.com", "test-pw")).thenReturn(user);
+    when(articleRepository.findById(anyLong())).thenReturn(Optional.of(article));
+    when(commentRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> commentService.deleteComment(1L, 1L, request))
+        .isInstanceOf(BusinessException.class)
+        .hasMessageContaining(ErrorCode.COMMENT_NOT_FOUND.getMessage());
+
+    verify(commentRepository, never()).deleteById(anyLong());
+  }
+
+  @Test
+  @DisplayName("댓글 삭제 성공")
+  void 댓글삭제_성공() {
+    CommentDeleteServiceRequest request = CommentDeleteServiceRequest.builder()
+                                                                     .email("test@test.com")
+                                                                     .password("test-pw")
+                                                                     .build();
+
+    User user = User.builder()
+                    .email("test@test.com")
+                    .password("encodedPassword")
+                    .username("testUser")
+                    .build();
+
+    Article article = mock(Article.class);
+    when(article.getId()).thenReturn(1L);
+
+    Comment comment = mock(Comment.class);
+    when(comment.getId()).thenReturn(1L);
+    when(comment.getUser()).thenReturn(user);
+    when(comment.getArticle()).thenReturn(article);
+
+    when(userValidator.validateUserAndPassword("test@test.com", "test-pw")).thenReturn(user);
+    when(articleRepository.findById(anyLong())).thenReturn(Optional.of(article));
+    when(commentRepository.findById(anyLong())).thenReturn(Optional.of(comment));
+
+    commentService.deleteComment(1L, 1L, request);
+
+    verify(commentRepository).deleteById(comment.getId());
   }
 }
