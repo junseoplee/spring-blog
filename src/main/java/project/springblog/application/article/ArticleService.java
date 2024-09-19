@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.springblog.application.article.request.ArticleCreateServiceRequest;
+import project.springblog.application.article.request.ArticleDeleteServiceRequest;
 import project.springblog.application.article.request.ArticleUpdateServiceRequest;
 import project.springblog.application.article.response.ArticleCreateResponse;
 import project.springblog.application.article.response.ArticleUpdateResponse;
@@ -33,23 +34,38 @@ public class ArticleService {
                              .build();
 
     Article savedArticle = articleRepository.save(article);
-
     return new ArticleCreateResponse(savedArticle.getId(), request.getEmail(), savedArticle.getTitle(), savedArticle.getContent());
   }
 
   @Transactional
   public ArticleUpdateResponse updateArticle(Long articleId, ArticleUpdateServiceRequest request) {
     User existUser = userValidator.validateUserAndPassword(request.getEmail(), request.getPassword());
+    Article foundArticle = findArticleById(articleId);
 
-    Article foundArticle = articleRepository.findById(articleId)
-                                           .orElseThrow(() -> new BusinessException(ErrorCode.ARTICLE_NOT_FOUND));
-
-    if (!foundArticle.getUser().getEmail().equals(request.getEmail())) {
-      throw new BusinessException(ErrorCode.USER_NOT_MATCH);
-    }
+    validateOwnership(foundArticle, existUser);
 
     foundArticle.update(request.getTitle(), request.getContent());
-
     return new ArticleUpdateResponse(foundArticle.getId(), existUser.getEmail(), foundArticle.getTitle(), foundArticle.getContent());
+  }
+
+  @Transactional
+  public void deleteArticle(Long articleId, ArticleDeleteServiceRequest request) {
+    User existUser = userValidator.validateUserAndPassword(request.getEmail(), request.getPassword());
+    Article foundArticle = findArticleById(articleId);
+
+    validateOwnership(foundArticle, existUser);
+
+    articleRepository.deleteById(foundArticle.getId());
+  }
+
+  private Article findArticleById(Long articleId) {
+    return articleRepository.findById(articleId)
+                            .orElseThrow(() -> new BusinessException(ErrorCode.ARTICLE_NOT_FOUND));
+  }
+
+  private void validateOwnership(Article article, User user) {
+    if (!article.getUser().getEmail().equals(user.getEmail())) {
+      throw new BusinessException(ErrorCode.USER_NOT_MATCH);
+    }
   }
 }
