@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import project.springblog.api.comment.request.CommentCreateRequest;
+import project.springblog.api.comment.request.CommentDeleteRequest;
 import project.springblog.api.comment.request.CommentUpdateRequest;
 import project.springblog.application.comment.CommentService;
 import project.springblog.application.comment.response.CommentCreateResponse;
@@ -21,6 +22,7 @@ import project.springblog.application.comment.response.CommentUpdateResponse;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doNothing;
 
 public class CommentControllerTest {
 
@@ -83,6 +85,23 @@ public class CommentControllerTest {
            .andExpect(MockMvcResultMatchers.jsonPath("$.commentId").value(1L))
            .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("test@test.com"))
            .andExpect(MockMvcResultMatchers.jsonPath("$.content").value("updated content"))
+           .andDo(MockMvcResultHandlers.print());
+  }
+
+  @Test
+  @DisplayName("댓글 삭제 요청 성공 시 204 status 반환한다.")
+  void 댓글삭제_성공_테스트() throws Exception {
+    CommentDeleteRequest request = CommentDeleteRequest.builder()
+                                                       .email("test@test.com")
+                                                       .password("test-pw")
+                                                       .build();
+
+    doNothing().when(commentService).deleteComment(any(), any(), any());
+
+    mockMvc.perform(MockMvcRequestBuilders.delete("/api/comments/1/1")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(objectMapper.writeValueAsString(request)))
+           .andExpect(MockMvcResultMatchers.status().isNoContent())
            .andDo(MockMvcResultHandlers.print());
   }
 }
