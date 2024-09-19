@@ -2,8 +2,12 @@ package project.springblog.api.article.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import project.springblog.application.article.request.ArticleUpdateServiceRequest;
 
+@Getter
+@NoArgsConstructor
 public class ArticleUpdateRequest {
 
   @NotBlank(message = "이메일을 입력해주세요.")
