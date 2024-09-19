@@ -14,10 +14,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import project.springblog.api.user.request.UserJoinRequest;
+import project.springblog.api.user.request.UserDeleteRequest;
 import project.springblog.application.user.UserService;
 import project.springblog.application.user.response.UserJoinResponse;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 public class UserControllerTest {
@@ -57,6 +59,23 @@ public class UserControllerTest {
            .andExpect(MockMvcResultMatchers.status().isCreated())
            .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("junseoplee@outlook.com"))
            .andExpect(MockMvcResultMatchers.jsonPath("$.username").value("junseoplee"))
+           .andDo(MockMvcResultHandlers.print());
+  }
+
+  @Test
+  @DisplayName("회원탈퇴 요청 성공 시 204 status 반환한다.")
+  void 회원탈퇴_성공_테스트() throws Exception {
+    UserDeleteRequest request = UserDeleteRequest.builder()
+                                                 .email("junseoplee@outlook.com")
+                                                 .password("junseoplee")
+                                                 .build();
+
+    doNothing().when(userService).deleteUser(any());
+
+    mockMvc.perform(MockMvcRequestBuilders.delete("/api/delete")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(objectMapper.writeValueAsString(request)))
+           .andExpect(MockMvcResultMatchers.status().isNoContent())
            .andDo(MockMvcResultHandlers.print());
   }
 }
