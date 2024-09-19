@@ -14,8 +14,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import project.springblog.api.comment.request.CommentCreateRequest;
+import project.springblog.api.comment.request.CommentUpdateRequest;
 import project.springblog.application.comment.CommentService;
 import project.springblog.application.comment.response.CommentCreateResponse;
+import project.springblog.application.comment.response.CommentUpdateResponse;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -58,6 +60,29 @@ public class CommentControllerTest {
            .andExpect(MockMvcResultMatchers.jsonPath("$.commentId").value(1L))
            .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("test@test.com"))
            .andExpect(MockMvcResultMatchers.jsonPath("$.content").value("test"))
+           .andDo(MockMvcResultHandlers.print());
+  }
+
+  @Test
+  @DisplayName("댓글 수정 요청 성공 시 CommentUpdateResponse와 200 status 반환한다.")
+  void 댓글수정_성공_테스트() throws Exception {
+    CommentUpdateRequest request = CommentUpdateRequest.builder()
+                                                       .email("test@test.com")
+                                                       .password("test-pw")
+                                                       .content("updated content")
+                                                       .build();
+
+    CommentUpdateResponse response = new CommentUpdateResponse(1L, "test@test.com", "updated content");
+
+    when(commentService.updateComment(any(), any(), any())).thenReturn(response);
+
+    mockMvc.perform(MockMvcRequestBuilders.patch("/api/comments/1/1")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(objectMapper.writeValueAsString(request)))
+           .andExpect(MockMvcResultMatchers.status().isOk())
+           .andExpect(MockMvcResultMatchers.jsonPath("$.commentId").value(1L))
+           .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("test@test.com"))
+           .andExpect(MockMvcResultMatchers.jsonPath("$.content").value("updated content"))
            .andDo(MockMvcResultHandlers.print());
   }
 }
