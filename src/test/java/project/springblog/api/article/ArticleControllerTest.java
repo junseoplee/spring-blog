@@ -14,8 +14,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import project.springblog.api.article.request.ArticleCreateRequest;
+import project.springblog.api.article.request.ArticleUpdateRequest;
 import project.springblog.application.article.ArticleService;
 import project.springblog.application.article.response.ArticleCreateResponse;
+import project.springblog.application.article.response.ArticleUpdateResponse;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -60,6 +62,31 @@ public class ArticleControllerTest {
            .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("junseoplee@outlook.com"))
            .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("junseoplee"))
            .andExpect(MockMvcResultMatchers.jsonPath("$.content").value("junseoplee"))
+           .andDo(MockMvcResultHandlers.print());
+  }
+
+  @Test
+  @DisplayName("글 수정 요청 성공 시 ArticleUpdateResponse와 200 status 반환한다.")
+  void 글수정_성공_테스트() throws Exception {
+    ArticleUpdateRequest request = ArticleUpdateRequest.builder()
+                                                       .email("test@test.com")
+                                                       .password("test-pw")
+                                                       .title("updatedTitle")
+                                                       .content("updatedContent")
+                                                       .build();
+
+    ArticleUpdateResponse response = new ArticleUpdateResponse(1L, "test@test.com", "updatedTitle", "updatedContent");
+
+    when(articleService.updateArticle(any(), any())).thenReturn(response);
+
+    mockMvc.perform(MockMvcRequestBuilders.patch("/api/articles/1")
+                                          .contentType(MediaType.APPLICATION_JSON)
+                                          .content(objectMapper.writeValueAsString(request)))
+           .andExpect(MockMvcResultMatchers.status().isOk())
+           .andExpect(MockMvcResultMatchers.jsonPath("$.articleId").value(1L))
+           .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("test@test.com"))
+           .andExpect(MockMvcResultMatchers.jsonPath("$.title").value("updatedTitle"))
+           .andExpect(MockMvcResultMatchers.jsonPath("$.content").value("updatedContent"))
            .andDo(MockMvcResultHandlers.print());
   }
 }
