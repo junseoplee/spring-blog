@@ -1,15 +1,17 @@
 package project.springblog.api.article;
 
 import jakarta.validation.Valid;
-import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import project.springblog.api.article.request.ArticleCreateRequest;
+import project.springblog.api.article.request.ArticleDeleteRequest;
 import project.springblog.api.article.request.ArticleUpdateRequest;
 import project.springblog.application.article.ArticleService;
 import project.springblog.application.article.response.ArticleCreateResponse;
 import project.springblog.application.article.response.ArticleUpdateResponse;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -35,5 +37,12 @@ public class ArticleController {
         request.toServiceRequest()
     );
     return ResponseEntity.ok(response);
+  }
+
+  @DeleteMapping("/{articleId}")
+  public ResponseEntity<Void> deleteArticle(@PathVariable Long articleId,
+      @Valid @RequestBody ArticleDeleteRequest request) {
+    articleService.deleteArticle(articleId, request.toServiceRequest());
+    return ResponseEntity.noContent().build();
   }
 }
