@@ -15,14 +15,24 @@ public class UserValidator {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
 
-  public User validateUserAndPassword(String email, String password) {
-    User existUser = userRepository.findByEmail(email)
-                                   .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+  public User validateUserAndPassword(String email, String rawPassword) {
+    User user = userRepository.findByEmail(email)
+                              .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-    if (!passwordEncoder.matches(password, existUser.getPassword())) {
+    if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
       throw new BusinessException(ErrorCode.WRONG_PASSWORD);
     }
 
-    return existUser;
+    return user;
+  }
+
+  public void checkDuplicateEmail(String email) {
+    if (userRepository.findByEmail(email).isPresent()) {
+      throw new BusinessException(ErrorCode.DUPLICATE_MAIL);
+    }
+  }
+
+  public String encodePassword(String rawPassword) {
+    return passwordEncoder.encode(rawPassword);
   }
 }
