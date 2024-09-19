@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import project.springblog.application.comment.request.CommentCreateServiceRequest;
+import project.springblog.application.comment.request.CommentUpdateServiceRequest;
+import project.springblog.application.comment.response.CommentCreateResponse;
+import project.springblog.application.comment.response.CommentUpdateResponse;
 import project.springblog.application.validator.UserValidator;
 import project.springblog.domain.article.Article;
 import project.springblog.domain.article.repository.ArticleRepository;
@@ -14,8 +18,6 @@ import project.springblog.domain.comment.repository.CommentRepository;
 import project.springblog.domain.user.User;
 import project.springblog.exception.BusinessException;
 import project.springblog.exception.ErrorCode;
-import project.springblog.application.comment.request.CommentCreateServiceRequest;
-import project.springblog.application.comment.response.CommentCreateResponse;
 
 import java.util.Optional;
 
@@ -69,12 +71,6 @@ class CommentServiceTest {
                                                                      .password("wrongPassword")
                                                                      .content("test content")
                                                                      .build();
-
-    User user = User.builder()
-                    .email("test@test.com")
-                    .password("encodedCorrectPassword")
-                    .username("testUser")
-                    .build();
 
     when(userValidator.validateUserAndPassword("test@test.com", "wrongPassword"))
         .thenThrow(new BusinessException(ErrorCode.WRONG_PASSWORD));
@@ -148,5 +144,83 @@ class CommentServiceTest {
     assertThat(response.getContent()).isEqualTo("test content");
 
     verify(commentRepository).save(any(Comment.class));
+  }
+
+  @Test
+  @DisplayName("댓글 수정 실패 - 존재하지 않는 사용자")
+  void 댓글수정_실패_존재하지않는사용자() {
+    CommentUpdateServiceRequest request = CommentUpdateServiceRequest.builder()
+                                                                     .email("test@test.com")
+                                                                     .password("test-pw")
+                                                                     .content("updated content")
+                                                                     .build();
+
+    doThrow(new BusinessException(ErrorCode.USER_NOT_FOUND))
+        .when(userValidator).validateUserAndPassword("test@test.com", "test-pw");
+
+    assertThatThrownBy(() -> commentService.updateComment(1L, 1L, request))
+        .isInstanceOf(BusinessException.class)
+        .hasMessageContaining(ErrorCode.USER_NOT_FOUND.getMessage());
+
+    verify(commentRepository, never()).save(any(Comment.class));
+  }
+
+  @Test
+  @DisplayName("댓글 수정 실패 - 존재하지 않는 게시글")
+  void 댓글수정_실패_존재하지않는게시글() {
+    CommentUpdateServiceRequest request = CommentUpdateServiceRequest.builder()
+                                                                     .email("test@test.com")
+                                                                     .password("test-pw")
+                                                                     .content("updated content")
+                                                                     .build();
+
+    User user = User.builder()
+                    .email("test@test.com")
+                    .password("encodedPassword")
+                    .username("testUser")
+                    .build();
+
+    when(userValidator.validateUserAndPassword("test@test.com", "test-pw")).thenReturn(user);
+    when(articleRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> commentService.updateComment(1L, 1L, request))
+        .isInstanceOf(BusinessException.class)
+        .hasMessageContaining(ErrorCode.ARTICLE_NOT_FOUND.getMessage());
+
+    verify(commentRepository, never()).save(any(Comment.class));
+  }
+
+  @Test
+  @DisplayName("댓글 수정 성공")
+  void 댓글수정_성공() {
+    CommentUpdateServiceRequest request = CommentUpdateServiceRequest.builder()
+                                                                     .email("test@test.com")
+                                                                     .password("test-pw")
+                                                                     .content("updated content")
+                                                                     .build();
+
+    User user = User.builder()
+                    .email("test@test.com")
+                    .password("encodedPassword")
+                    .username("testUser")
+                    .build();
+
+    Article article = mock(Article.class);
+    when(article.getId()).thenReturn(1L);
+
+    Comment comment = Comment.builder()
+                             .user(user)
+                             .article(article)
+                             .content("original content")
+                             .build();
+
+    when(userValidator.validateUserAndPassword("test@test.com", "test-pw")).thenReturn(user);
+    when(articleRepository.findById(anyLong())).thenReturn(Optional.of(article));
+    when(commentRepository.findById(anyLong())).thenReturn(Optional.of(comment));
+
+    CommentUpdateResponse response = commentService.updateComment(1L, 1L, request);
+
+    assertThat(response.getEmail()).isEqualTo("test@test.com");
+    assertThat(response.getContent()).isEqualTo("updated content");
   }
 }
