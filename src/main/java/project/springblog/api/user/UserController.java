@@ -15,7 +15,7 @@ import project.springblog.application.user.UserService;
 import project.springblog.application.user.response.UserJoinResponse;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 

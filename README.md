@@ -6,15 +6,15 @@
 
 | Method | URI             | Description  | Request Body Fields                                    | Response Body Fields                    | Status Code  |
 |--------|-----------------|--------------|-------------------------------------------------------|-----------------------------------------|--------------|
-| POST   | /api/user/join   | 회원 가입     | `email`, `password`, `username`                        | `email`, `username`                     | 201 Created  |
+| POST   | /api/users/join | 회원 가입     | `email`, `password`, `username`                        | `email`, `username`                     | 201 Created  |
 
 ---
 
 ### 회원 탈퇴
 
-| Method | URI             | Description  | Request Body Fields                             | Response Body Fields | Status Code  |
-|--------|-----------------|--------------|-------------------------------------------------|----------------------|--------------|
-| DELETE | /api/user/delete | 회원 탈퇴     | `email`, `password`                             | 없음                 | 204 No Content |
+| Method | URI               | Description  | Request Body Fields                             | Response Body Fields | Status Code  |
+|--------|-------------------|--------------|-------------------------------------------------|----------------------|--------------|
+| DELETE | /api/users/delete | 회원 탈퇴     | `email`, `password`                             | 없음                 | 204 No Content |
 
 ---
 
