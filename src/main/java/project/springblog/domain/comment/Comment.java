@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
@@ -41,4 +42,11 @@ public class Comment extends BaseEntity {
 
   @Column(nullable = false)
   private String content;
+
+  @Builder
+  private Comment(User user, Article article, String content) {
+    this.user = user;
+    this.article = article;
+    this.content = content;
+  }
 }
